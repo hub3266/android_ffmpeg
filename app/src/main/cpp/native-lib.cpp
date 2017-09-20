@@ -33,6 +33,7 @@ JNIEXPORT void JNICALL mp4_to_yuv(JNIEnv *env,jobject obj,jstring inputStr_,jstr
         LOGE("打开文件失败  " );
         return;
     }
+    // pAVFormatContext 填充数据
     if (avformat_find_stream_info(pAVFormatContext, NULL) < 0) {
         LOGE("获取信息失败");
         return;
@@ -98,10 +99,8 @@ JNIEXPORT void JNICALL mp4_to_yuv(JNIEnv *env,jobject obj,jstring inputStr_,jstr
     av_frame_free(&pAVFrame);
     av_frame_free(&pYuvAVFrame);
     avcodec_close(pAVCodecContext);
-    LOGE("11111111111111111");
     avcodec_free_context(&pAVCodecContext);
     avformat_free_context(pAVFormatContext);
-    LOGE("222222");
     env->ReleaseStringUTFChars(inputStr_,inputStr);
     env->ReleaseStringUTFChars(outputStr_,outputStr);
     LOGE("complate");

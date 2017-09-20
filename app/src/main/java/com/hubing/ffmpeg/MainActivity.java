@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MainActivityPermissionsDispatcher.to2WithPermissionCheck(MainActivity.this,input,output);
+                MainActivityPermissionsDispatcher.mp42YuvWithPermissionCheck(MainActivity.this,input,output);
 
             }
         });
@@ -61,17 +61,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @NeedsPermission({Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE})
-    void to2(String input, String output) {
-        if(new File(input).exists()){
-            Log.d("ffmpeg","input exists:"+input);
-            try {
-                InputStream in = new FileInputStream(new File(input));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }else {
-            Log.d("ffmpeg","input  is not exists:"+input);
-        }
+    void mp42Yuv(String input, String output) {
         mp4ToYuv(input,output);
     }
 
