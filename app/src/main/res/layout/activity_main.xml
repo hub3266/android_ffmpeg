@@ -24,4 +24,10 @@
         android:text="MP4转yuv"
         />
 
+    <Button
+        android:id="@+id/video"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="视频播放"
+        />
 </LinearLayout>

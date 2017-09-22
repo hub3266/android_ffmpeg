@@ -1,6 +1,7 @@
 package com.hubing.ffmpeg;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
@@ -24,18 +25,6 @@ import permissions.dispatcher.RuntimePermissions;
 @RuntimePermissions
 public class MainActivity extends AppCompatActivity {
 
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("avcodec-56");
-        System.loadLibrary("avdevice-56");
-        System.loadLibrary("avfilter-5");
-        System.loadLibrary("avformat-56");
-        System.loadLibrary("avutil-54");
-        System.loadLibrary("postproc-53");
-        System.loadLibrary("swresample-1");
-        System.loadLibrary("swscale-3");
-        System.loadLibrary("native-lib");
-    }
 
     final String input = new File(Environment.getExternalStorageDirectory(), "input.mp4").getAbsolutePath();
     final String  output= new File(Environment.getExternalStorageDirectory(), "output.yuv").getAbsolutePath();
@@ -44,10 +33,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText(stringFromJNI());
+        tv.setText(FFmpegUtils.getInstance().stringFromJNI());
 
 
         Button btn = (Button) findViewById(R.id.btn);
+        Button video = (Button) findViewById(R.id.video);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -55,14 +45,19 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        video.setOnClickListener(new View.OnClickListener(){
 
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this,com.hubing.ffmpeg.VideoActivity.class));
+            }
+        });
 
-        //mp4ToYuv(input,output);
     }
 
     @NeedsPermission({Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE})
     void mp42Yuv(String input, String output) {
-        mp4ToYuv(input,output);
+        FFmpegUtils.getInstance().mp4ToYuv(input,output);
     }
 
     @Override
@@ -72,10 +67,6 @@ public class MainActivity extends AppCompatActivity {
         MainActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native String stringFromJNI();
-    public native void mp4ToYuv(String in,String out);
+
+
 }
