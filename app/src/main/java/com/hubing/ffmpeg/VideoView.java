@@ -16,18 +16,21 @@ public class VideoView extends SurfaceView{
 
     public VideoView(Context context) {
         super(context);
+        init();
     }
 
     public VideoView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init();
     }
 
     public VideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init();
     }
 
     private void init(){
-        VideoView.this.getHolder().setFormat(PixelFormat.RGB_888);
+        VideoView.this.getHolder().setFormat(PixelFormat.RGBA_8888);
     }
 
     public void  player(String path){

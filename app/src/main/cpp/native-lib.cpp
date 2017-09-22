@@ -136,6 +136,7 @@ JNIEXPORT void JNICALL player(JNIEnv *env, jobject obj, jstring inpath_, jobject
     }
 
     int vedio_stream_idx = -1;
+    int i = 0;
     for (int i = 0; i < pAVFormatContext->nb_streams; i++) {
         if (pAVFormatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
             vedio_stream_idx = i;
@@ -145,7 +146,6 @@ JNIEXPORT void JNICALL player(JNIEnv *env, jobject obj, jstring inpath_, jobject
     //解码器上下文
     AVCodecContext *pAVCodecContext = pAVFormatContext->streams[vedio_stream_idx]->codec;
     //解码器
-    //const  AVCodec* pAVCodec = pAVCodecContext->codec;
     AVCodec *pAVCodec = avcodec_find_decoder(pAVCodecContext->codec_id);
 
     //解码
@@ -155,26 +155,26 @@ JNIEXPORT void JNICALL player(JNIEnv *env, jobject obj, jstring inpath_, jobject
     }
 
     AVPacket *avpacket = (AVPacket *) av_malloc(sizeof(AVPacket));
-    if (av_read_frame(pAVFormatContext, avpacket) < 0) {
-        LOGE("获取压缩帧失败！！")
-    }
 
     AVFrame *src_frame = av_frame_alloc();
     AVFrame *des_frame = av_frame_alloc();
-    //    给yuvframe  的缓冲区 初始化
+    //    给des_frame  的缓冲区 初始化
     uint8_t *buffSize = (uint8_t *) av_malloc(
             avpicture_get_size(AV_PIX_FMT_RGBA, pAVCodecContext->width,
                                pAVCodecContext->height));
-    avpicture_fill((AVPicture *) des_frame, buffSize, AV_PIX_FMT_RGBA, pAVCodecContext->width,pAVCodecContext->height);
+    avpicture_fill((AVPicture *) des_frame, buffSize, AV_PIX_FMT_RGBA, pAVCodecContext->width,
+                   pAVCodecContext->height);
     LOGE("宽 %d  高 %d", pAVCodecContext->width, pAVCodecContext->height);
 
-    SwsContext* swsContext = sws_getContext(pAVCodecContext->width, pAVCodecContext->height, pAVCodecContext->pix_fmt,
-                   pAVCodecContext->width, pAVCodecContext->height, AV_PIX_FMT_RGBA, SWS_BILINEAR,
-                   NULL, NULL, NULL);
+    SwsContext *swsContext = sws_getContext(pAVCodecContext->width, pAVCodecContext->height,
+                                            pAVCodecContext->pix_fmt,
+                                            pAVCodecContext->width, pAVCodecContext->height,
+                                            AV_PIX_FMT_RGBA, SWS_BICUBIC,
+                                            NULL, NULL, NULL);
     LOGE("获取转换上下文");
 
-    ANativeWindow  *nativeWindow = ANativeWindow_fromSurface(env,surface);
-    ANativeWindow_Buffer outBuffer ;
+    ANativeWindow *nativeWindow = ANativeWindow_fromSurface(env, surface);
+    ANativeWindow_Buffer outBuffer;
     //packet入参 出参对象  转换上下文
     int got_frame;
     //读取码流中的音频若干帧或者视频一帧
@@ -183,48 +183,52 @@ JNIEXPORT void JNICALL player(JNIEnv *env, jobject obj, jstring inpath_, jobject
         // 根据frame 进行原生绘制    bitmap  window
         //got_frame 0 :没有frame
         avcodec_decode_video2(pAVCodecContext, src_frame, &got_frame, avpacket);
-
-        if (got_frame > 0) {
-           // WINDOW_FORMAT_RGBA_8888          = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
-            //ANativeWindow_setBuffersGeometry(nativeWindow,pAVCodecContext->width, pAVCodecContext->height,WINDOW_FORMAT_RGBA_8888);
+        LOGE("got_frame%d", got_frame);
+        if (got_frame) {
+            // WINDOW_FORMAT_RGBA_8888          = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
+            //ANativeWindow_setBuffersGeometry(nativeWindow, pAVCodecContext->width,
+            //                                pAVCodecContext->height, WINDOW_FORMAT_RGBA_8888);
             LOGE("pAVCodecContext->width %d  pAVCodecContext->height %d",pAVCodecContext->width, pAVCodecContext->height);
-            ANativeWindow_setBuffersGeometry(nativeWindow,1200/(1200/(float)480), 1900/(1200/(float)480),WINDOW_FORMAT_RGBA_8888);
-            ANativeWindow_lock(nativeWindow,&outBuffer,NULL);
-            sws_scale(swsContext, (const uint8_t *const *) src_frame->data, src_frame->linesize, 0,
-                      src_frame->height, des_frame->data, des_frame->linesize);
-            int y_size = pAVCodecContext->width * pAVCodecContext->height;
+            float scale = (1200 / (float) pAVCodecContext->width);
+            LOGE("1111111111111111111111111111");
+            ANativeWindow_setBuffersGeometry(nativeWindow, (int32_t) (1200 / scale),
+                                             (int32_t) (1900 / scale), WINDOW_FORMAT_RGBA_8888);
+            LOGE("2222222222222222222222");
+            int32_t lock = ANativeWindow_lock(nativeWindow, &outBuffer, NULL);
+            sws_scale(swsContext, (const uint8_t *const *) src_frame->data, src_frame->linesize,
+                      0,
+                      pAVCodecContext->height, des_frame->data, des_frame->linesize);
             //rgb 画面所有数据 首地址
-            uint8_t*  out  = (uint8_t*) outBuffer.bits;
+            uint8_t *out = (uint8_t *) outBuffer.bits;
             //   每行数据
             //outBuffer.stride  缓冲区一行的pix 数
             //outStride  pix数*4 = bite数
-            int32_t outStride = outBuffer.stride*4;
+            int32_t outStride = outBuffer.stride * 4;
             // 实际内存  首地址
-            uint8_t* des =  des_frame->data[0];
-             // 实际  每行的bite数
-            int desStride =  des_frame->linesize[0];
-
-            LOGE("outStride %d  desStride %d",outStride, desStride);
-            LOGE("desStride nb %d  desStride %d",des_frame->linesize, desStride);
-
-
+            uint8_t *des = (uint8_t *) des_frame->data[0];
+            // 实际  每行的bite数
+            int desStride = des_frame->linesize[0];
+            LOGE("outStride %d  desStride %d", outStride, desStride);
 
             for (int i = 0; i < (pAVCodecContext->height); ++i) {
-//                memcpy(void *dest, const void *src, size_t n)
-                memcpy(out + i * outStride,  des + i * desStride, desStride);
+                memcpy(out + i * outStride, des + i * desStride, desStride);
             }
 
-            ANativeWindow_unlockAndPost(nativeWindow);
-            usleep(1000*20);
+            if(lock ==0) {
+                ANativeWindow_unlockAndPost(nativeWindow);
+            }
+
+            usleep(1000 * 16);
         }
         av_free_packet(avpacket);
     }
 
-    sws_freeContext(swsContext);
+    //sws_freeContext(swsContext);
     ANativeWindow_release(nativeWindow);
     av_frame_free(&src_frame);
-    av_frame_free(&des_frame);
-    avcodec_free_context(&pAVCodecContext);
+    //av_frame_free(&des_frame);
+    avcodec_close(pAVCodecContext);
+    //avcodec_free_context(&pAVCodecContext);
     avformat_free_context(pAVFormatContext);
     env->ReleaseStringUTFChars(inpath_, inpath);
 
@@ -234,7 +238,7 @@ JNIEXPORT void JNICALL player(JNIEnv *env, jobject obj, jstring inpath_, jobject
 //  java 方法 和c 方法 关联
 static const JNINativeMethod methods[] = {
         {
-                "mp4ToYuv", "(Ljava/lang/String;Ljava/lang/String;)V",    (void *) mp4_to_yuv
+                "mp4ToYuv", "(Ljava/lang/String;Ljava/lang/String;)V",     (void *) mp4_to_yuv
         },
         {
                 "player",   "(Ljava/lang/String;Landroid/view/Surface;)V", (void *) player
