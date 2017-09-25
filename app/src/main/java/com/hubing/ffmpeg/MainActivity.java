@@ -27,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     final String input = new File(Environment.getExternalStorageDirectory(), "input.mp4").getAbsolutePath();
+
+    final String inputMp3 = new File(Environment.getExternalStorageDirectory(), "input1.mp3").getAbsolutePath();
     final String  output= new File(Environment.getExternalStorageDirectory(), "output.yuv").getAbsolutePath();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
         Button btn = (Button) findViewById(R.id.btn);
         Button video = (Button) findViewById(R.id.video);
+        Button audio = (Button) findViewById(R.id.audio);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -52,12 +55,24 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this,com.hubing.ffmpeg.VideoActivity.class));
             }
         });
+        audio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivityPermissionsDispatcher.playAudioWithPermissionCheck(MainActivity.this,inputMp3);
+            }
+        });
+
 
     }
 
     @NeedsPermission({Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE})
     void mp42Yuv(String input, String output) {
         FFmpegUtils.getInstance().mp4ToYuv(input,output);
+    }
+
+    @NeedsPermission({Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE})
+    void playAudio(String input) {
+        FFmpegUtils.getInstance().mp3Player(inputMp3,AudioPlayer.getInstance());
     }
 
     @Override

@@ -19,9 +19,10 @@ import permissions.dispatcher.RuntimePermissions;
 public class VideoActivity extends AppCompatActivity {
 
     private VideoView video;
-    final String input = new File(Environment.getExternalStorageDirectory(), "input.mp4").getAbsolutePath();//Warcraft3_End.avi  Titanic.mkv
+    //final String input = new File(Environment.getExternalStorageDirectory(), "input.mp4").getAbsolutePath();//Warcraft3_End.avi  Titanic.mkv  http://www.hubg.top/
     //final String input = new File(Environment.getExternalStorageDirectory(), "Warcraft3_End.avi").getAbsolutePath();
-    //final String input = new File(Environment.getExternalStorageDirectory(), "Titanic.mkv").getAbsolutePath();
+    final String input = new File(Environment.getExternalStorageDirectory(), "Titanic.mkv").getAbsolutePath();
+    //final String input = "http://www.hubg.top/input.mp4";
     final String output = new File(Environment.getExternalStorageDirectory(), "output.yuv").getAbsolutePath();
 
     @Override

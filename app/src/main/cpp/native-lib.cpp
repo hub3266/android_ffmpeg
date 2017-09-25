@@ -9,6 +9,7 @@ extern "C" {
 #include <android/native_window_jni.h>
 #include <unistd.h>
 #include <assert.h>
+#include <libswresample/swresample.h>
 }
 #define LOGI(FORMAT, ...) __android_log_print(ANDROID_LOG_INFO,"ffmpeg",FORMAT,##__VA_ARGS__);
 #define LOGE(FORMAT, ...) __android_log_print(ANDROID_LOG_ERROR,"ffmpeg",FORMAT,##__VA_ARGS__);
@@ -188,7 +189,8 @@ JNIEXPORT void JNICALL player(JNIEnv *env, jobject obj, jstring inpath_, jobject
             // WINDOW_FORMAT_RGBA_8888          = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
             //ANativeWindow_setBuffersGeometry(nativeWindow, pAVCodecContext->width,
             //                                pAVCodecContext->height, WINDOW_FORMAT_RGBA_8888);
-            LOGE("pAVCodecContext->width %d  pAVCodecContext->height %d",pAVCodecContext->width, pAVCodecContext->height);
+            LOGE("pAVCodecContext->width %d  pAVCodecContext->height %d", pAVCodecContext->width,
+                 pAVCodecContext->height);
             float scale = (1200 / (float) pAVCodecContext->width);
             LOGE("1111111111111111111111111111");
             ANativeWindow_setBuffersGeometry(nativeWindow, (int32_t) (1200 / scale),
@@ -214,7 +216,7 @@ JNIEXPORT void JNICALL player(JNIEnv *env, jobject obj, jstring inpath_, jobject
                 memcpy(out + i * outStride, des + i * desStride, desStride);
             }
 
-            if(lock ==0) {
+            if (lock == 0) {
                 ANativeWindow_unlockAndPost(nativeWindow);
             }
 
@@ -234,14 +236,120 @@ JNIEXPORT void JNICALL player(JNIEnv *env, jobject obj, jstring inpath_, jobject
 
 }
 
+JNIEXPORT void JNICALL MP3_to_pcm(JNIEnv *env, jobject obj, jstring inputStr_, jobject audioPlayer) {
+    const char *inputStr = env->GetStringUTFChars(inputStr_, NULL);
+    //const char *outputStr = env->GetStringUTFChars(outputStr_, NULL);
+    LOGE("inputStr%s",inputStr)
+    //注册各大组件
+    av_register_all();
+
+
+    AVFormatContext *pAVFormatContext = avformat_alloc_context();
+
+    if (avformat_open_input(&pAVFormatContext, inputStr, NULL, NULL) != 0) {
+        LOGE("打开文件失败！！")
+        return;
+    }
+
+    if (avformat_find_stream_info(pAVFormatContext, NULL) < 0) {
+        LOGI("%s", "无法获取输入文件信息");
+        return;
+    }
+
+    int audio_stream_idx = -1;
+    for ( int i = 0; i < pAVFormatContext->nb_streams; ++i) {
+        if (pAVFormatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            LOGE("%d  找到音频id  %d", i,pAVFormatContext->streams[i]->codec->codec_type);
+            audio_stream_idx = i;
+            break;
+        }
+    }
+
+    AVCodecContext *avCodecContext = pAVFormatContext->streams[audio_stream_idx]->codec;
+    LOGE("获取视频编码器上下文 %p  ",avCodecContext);
+    AVCodec *avCodec = avcodec_find_decoder(avCodecContext->codec_id);
+    //const AVCodec* avCodec = avCodecContext->codec;
+    if(avCodec==NULL){
+        LOGE("获取视频编码null  avCodec %p",avCodec);
+    }
+    int ret = avcodec_open2(avCodecContext, avCodec, NULL);
+    if (ret < 0) {
+       LOGE("%d  %s",ret, "无法打开解码器");
+        return;
+    }
+
+    AVPacket *avPacket = (AVPacket *) av_malloc(sizeof(AVPacket));
+    AVFrame *srcAVFram = av_frame_alloc();
+    AVFrame *dstAVFram = av_frame_alloc();
+
+    SwrContext *swrContext = swr_alloc();
+
+    //    音频格式  重采样设置参数
+    AVSampleFormat in_sample = avCodecContext->sample_fmt;
+//    输出采样格式
+    AVSampleFormat out_sample = AV_SAMPLE_FMT_S16;
+// 输入采样率
+    int in_sample_rate = avCodecContext->sample_rate;
+//    输出采样
+    int out_sample_rate = 44100;
+
+//    输入声道布局
+    uint64_t in_ch_layout = avCodecContext->channel_layout;
+//    输出声道布局
+    uint64_t out_ch_layout = AV_CH_LAYOUT_STEREO;
+    //    设置音频缓冲区间 16bit   44100  PCM数据
+    uint8_t *out_buffer = (uint8_t *) av_malloc(2 * 44100);
+
+    swr_alloc_set_opts(swrContext,out_ch_layout,out_sample,out_sample_rate
+            ,in_ch_layout,in_sample,in_sample_rate,0,NULL);
+    swr_init(swrContext);
+    LOGE("swrContext init");
+    int out_channerl_nb = av_get_channel_layout_nb_channels(out_ch_layout);
+
+    //    反射得到Class类型
+    jclass audioPlayercls = env->GetObjectClass(audioPlayer);
+//    反射得到createAudio方法
+    jmethodID createAudio = env->GetMethodID(audioPlayercls, "createAudio", "(II)V");
+//    反射调用createAudio
+    env->CallVoidMethod(audioPlayer, createAudio, 44100, out_channerl_nb);
+    LOGE("createAudio");
+    jmethodID audio_write = env->GetMethodID(audioPlayercls, "playTrack", "([BI)V");
+
+    while (av_read_frame(pAVFormatContext, avPacket)>=0) {
+        int got_frame_ptr = 0;
+        avcodec_decode_audio4(avCodecContext, srcAVFram, &got_frame_ptr, avPacket);
+        if (got_frame_ptr > 0) {
+            LOGE("解码");
+            //
+            //int swr_convert(struct SwrContext *s, uint8_t **out, int out_count,const uint8_t **in , int in_count);
+            swr_convert(swrContext, &out_buffer, 2 * 44100, (const uint8_t **) srcAVFram->data,
+                        srcAVFram->nb_samples);
+
+            int size = av_samples_get_buffer_size(NULL,out_channerl_nb, srcAVFram->nb_samples, out_sample, 1);
+
+            jbyteArray audio_sample_array = env->NewByteArray(size);
+            env->SetByteArrayRegion(audio_sample_array, 0, size, (const jbyte *) out_buffer);
+            env->CallVoidMethod(audioPlayer, audio_write, audio_sample_array, size);
+            env->DeleteLocalRef(audio_sample_array);
+        }
+    }
+
+
+    avformat_free_context(pAVFormatContext);
+    env->ReleaseStringUTFChars(inputStr_, inputStr);
+}
+
 
 //  java 方法 和c 方法 关联
 static const JNINativeMethod methods[] = {
         {
-                "mp4ToYuv", "(Ljava/lang/String;Ljava/lang/String;)V",     (void *) mp4_to_yuv
+                "mp4ToYuv",  "(Ljava/lang/String;Ljava/lang/String;)V",     (void *) mp4_to_yuv
         },
         {
-                "player",   "(Ljava/lang/String;Landroid/view/Surface;)V", (void *) player
+                "player",    "(Ljava/lang/String;Landroid/view/Surface;)V", (void *) player
+        },
+        {
+                "mp3Player", "(Ljava/lang/String;Lcom/hubing/ffmpeg/AudioPlayer;)V",     (void *) MP3_to_pcm
         }
 };
 
