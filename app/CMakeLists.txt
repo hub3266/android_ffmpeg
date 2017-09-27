@@ -8,7 +8,9 @@ set(DIRROOT ${PROJECT_SOURCE_DIR}/libs/${ANDROID_ABI})
 
 add_library( native-lib
              SHARED
-             src/main/cpp/native-lib.cpp )
+             src/main/cpp/native-lib.cpp
+             src/main/cpp/ffmpegAudio.cpp
+             src/main/cpp/SLESPlayer.cpp)
 
 
 find_library(log-lib
@@ -77,4 +79,5 @@ target_link_libraries( native-lib
                        swresample-1
                        swscale-3
                        android
+                       OpenSLES
                        ${log-lib} )

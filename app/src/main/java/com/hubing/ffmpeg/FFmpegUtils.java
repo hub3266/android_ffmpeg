@@ -31,4 +31,5 @@ public class FFmpegUtils {
     public native void mp4ToYuv(String in,String out);
     public native void player(String in,Surface surface);
     public native void mp3Player(String in,AudioPlayer audioPlayer);
+    public native void openSLELMP3Player(String in);
 }

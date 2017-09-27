@@ -35,6 +35,13 @@
         android:id="@+id/audio"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:text="音频播放"
+        android:text="AudioTack音频播放"
+        />
+
+    <Button
+        android:id="@+id/openSLELaudio"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="openSLEL音频播放"
         />
 </LinearLayout>

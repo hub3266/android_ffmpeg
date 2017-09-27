@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
         Button btn = (Button) findViewById(R.id.btn);
         Button video = (Button) findViewById(R.id.video);
         Button audio = (Button) findViewById(R.id.audio);
+        Button openSLELAudio = (Button) findViewById(R.id.openSLELaudio);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -62,6 +63,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        openSLELAudio.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivityPermissionsDispatcher.openSLELAudioWithPermissionCheck(MainActivity.this,inputMp3);
+            }
+        });
+
 
     }
 
@@ -73,6 +81,11 @@ public class MainActivity extends AppCompatActivity {
     @NeedsPermission({Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE})
     void playAudio(String input) {
         FFmpegUtils.getInstance().mp3Player(inputMp3,AudioPlayer.getInstance());
+    }
+
+    @NeedsPermission({Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE})
+    void openSLELAudio(String input) {
+        FFmpegUtils.getInstance().openSLELMP3Player(inputMp3);
     }
 
     @Override
