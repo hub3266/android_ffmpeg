@@ -28,6 +28,7 @@ SLVolumeItf bqPlayerVolume;
 
 size_t bufferSize;
 void *buffer;
+
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
     LOGE("进入bqPlayerCallback");
@@ -74,6 +75,18 @@ Java_com_hubing_ffmpeg_FFmpegUtils_openSLELMP3Player(JNIEnv *env, jobject jobj, 
 
     //  配置信息设置
     SLDataLocator_AndroidSimpleBufferQueue android_queue={SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,2};
+
+    /**
+typedef struct SLDataFormat_PCM_ {
+    SLuint32 		formatType;  pcm
+    SLuint32 		numChannels;  通道数
+    SLuint32 		samplesPerSec;  采样率
+    SLuint32 		bitsPerSample;  采样位数
+    SLuint32 		containerSize;  包含位数
+    SLuint32 		channelMask;     立体声
+    SLuint32		endianness;    end标志位
+} SLDataFormat_PCM;
+ */
     SLDataFormat_PCM pcm={SL_DATAFORMAT_PCM,2,SL_SAMPLINGRATE_44_1,SL_PCMSAMPLEFORMAT_FIXED_16
             ,SL_PCMSAMPLEFORMAT_FIXED_16,SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT,SL_BYTEORDER_LITTLEENDIAN};
 
