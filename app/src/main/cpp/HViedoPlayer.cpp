@@ -74,7 +74,7 @@ void *process(void *args) {
             hVideo->index = i;
             if (window)
                 ANativeWindow_setBuffersGeometry(window, hVideo->codec->width,
-                                                 hVideo->codec->height,
+                                                hVideo->codec->height,
                                                  WINDOW_FORMAT_RGBA_8888);
             LOGE("解码器打开 视频")
         } else if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {

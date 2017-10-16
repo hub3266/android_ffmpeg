@@ -22,6 +22,7 @@ public:
     int put(AVPacket *packet);
     int get(AVPacket *packet);
     void stop();
+    double  synchronize(AVFrame *frame, double play);
 
 public:
     int index;
@@ -37,5 +38,8 @@ public:
 
     //    处理线程
     pthread_t p_playid;
+
+    AVRational time_base;
+    double  clock;
 };
 #endif //FFMPEG_HVIDEO_H

@@ -103,6 +103,9 @@ int getPcm(HAudio* audio){
     while(audio->isPlay){
         LOGI("HAudio getPcm 获取 packet");
         audio->get(packet);
+        if (packet->pts != AV_NOPTS_VALUE) {
+            audio->clock = av_q2d(audio->time_base) * packet->pts;
+        }
         avcodec_decode_audio4(audio->codecContext,frame,&got_frame_ptr,packet);
         LOGI("HAudio getPcm got_frame_ptr %d",got_frame_ptr);
         if(got_frame_ptr) {
@@ -128,6 +131,10 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq,void *pContext){
     int bufferSize;
     bufferSize = getPcm(audio);
     if(bufferSize>0) {
+        double time = bufferSize/((double) 44100 *2 * 2);
+        LOGE("数据长度%d  分母%d  值%f 通道数%d",bufferSize,44100 *2 * 2,time,audio->out_channer_nb);
+            audio->clock = audio->clock +time;
+        LOGE("当前一帧声音时间%f   播放时间%f",time,audio->clock);
         result = (*bq)->Enqueue(bq, audio->out_buffer, bufferSize);
        //assert(SL_RESULT_SUCCESS == result);
     }else{

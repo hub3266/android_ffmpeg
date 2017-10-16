@@ -46,6 +46,12 @@ public:
     pthread_cond_t cond;
     std::queue<AVPacket *> queue;
 
+
+    //    相对于第一帧时间
+    double clock;
+
+    AVRational time_base;
+
     //opensl el
     SLObjectItf engineObject;
     SLEngineItf engineEngine;
