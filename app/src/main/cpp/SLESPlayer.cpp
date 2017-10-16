@@ -124,6 +124,7 @@ typedef struct SLDataFormat_PCM_ {
     //    获取播放状态接口
     (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING);
     LOGE("获取播放状态接口");
+
     bqPlayerCallback(bqPlayerBufferQueue, NULL);
     LOGE("SLES compleate");
 }

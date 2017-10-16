@@ -32,4 +32,6 @@ public class FFmpegUtils {
     public native void player(String in,Surface surface);
     public native void mp3Player(String in,AudioPlayer audioPlayer);
     public native void openSLELMP3Player(String in);
+
+    public native void HPlayer(String in,Surface surface);
 }

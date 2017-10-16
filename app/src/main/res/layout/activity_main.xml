@@ -39,9 +39,16 @@
         />
 
     <Button
-        android:id="@+id/openSLELaudio"
+    android:id="@+id/openSLELaudio"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:text="openSLEL音频播放"
+    />
+
+    <Button
+        android:id="@+id/HVideo"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:text="openSLEL音频播放"
+        android:text="音视频播放"
         />
 </LinearLayout>

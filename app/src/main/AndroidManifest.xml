@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -27,6 +28,8 @@
         </activity>
 
         <activity android:name=".VideoActivity">
+        </activity>
+        <activity android:name=".hvideo.HVideoActivity">
         </activity>
     </application>
 </manifest>

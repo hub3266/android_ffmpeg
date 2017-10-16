@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         Button video = (Button) findViewById(R.id.video);
         Button audio = (Button) findViewById(R.id.audio);
         Button openSLELAudio = (Button) findViewById(R.id.openSLELaudio);
+        Button HVideo = (Button) findViewById(R.id.HVideo);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -67,6 +68,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 MainActivityPermissionsDispatcher.openSLELAudioWithPermissionCheck(MainActivity.this,inputMp3);
+            }
+        });
+
+        HVideo.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this,com.hubing.ffmpeg.hvideo.HVideoActivity.class));
+                finish();
             }
         });
 
